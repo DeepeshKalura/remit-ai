@@ -7,8 +7,10 @@ import { chatClient } from "@/lib/chat-client";
 import { AlertCircle, Loader2, MessageCircle, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+
+
 interface Message {
-  id: string
+  id: number,
   type: "user" | "ai"
   content: string
   timestamp: Date
@@ -18,7 +20,7 @@ interface Message {
 export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: "1",
+      id: 1,
       type: "ai",
       content:
         "Hello! I'm RemitAI. How can I help you send money today? I can check live DEX rates or help you find a recipient.",
@@ -39,7 +41,7 @@ export default function ChatInterface() {
 
     // 1. Create and display User Message immediately
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: 99,
       type: "user",
       content: input,
       timestamp: new Date(),
@@ -51,11 +53,11 @@ export default function ChatInterface() {
 
     try {
       // 2. Call the Real Backend
-      const responseText = await chatClient.sendMessage(userMessage.content)
+      const responseText = await chatClient.sendMessage(userMessage.content, userMessage.id)
 
       // 3. Display AI Response
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: Math.floor(Math.random() * 1000000000000000),
         type: "ai",
         content: responseText,
         timestamp: new Date(),
@@ -65,7 +67,7 @@ export default function ChatInterface() {
     } catch (error) {
       // 4. Handle Errors Gracefully
       const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: Math.floor(Math.random() * 1000000000000000),
         type: "ai",
         content: "I'm having trouble connecting to the backend. Is the Python server running on port 5000?",
         timestamp: new Date(),
@@ -92,13 +94,12 @@ export default function ChatInterface() {
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}>
             <Card
-              className={`max-w-[85%] px-4 py-2 ${
-                msg.type === "user"
-                  ? "bg-cyan-600 border-cyan-500 text-white"
-                  : msg.isError 
-                    ? "bg-red-900/50 border-red-500/50 text-red-200"
-                    : "bg-slate-700 border-slate-600 text-slate-100"
-              }`}
+              className={`max-w-[85%] px-4 py-2 ${msg.type === "user"
+                ? "bg-cyan-600 border-cyan-500 text-white"
+                : msg.isError
+                  ? "bg-red-900/50 border-red-500/50 text-red-200"
+                  : "bg-slate-700 border-slate-600 text-slate-100"
+                }`}
             >
               <div className="flex items-start gap-2">
                 {msg.isError && <AlertCircle className="w-4 h-4 mt-0.5" />}
@@ -110,7 +111,7 @@ export default function ChatInterface() {
             </Card>
           </div>
         ))}
-        
+
         {loading && (
           <div className="flex justify-start">
             <Card className="bg-slate-700 border-slate-600 px-4 py-3">

@@ -15,7 +15,7 @@ export interface ChatResponse {
   response: string;
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
 
 export class ChatClient {
   async sendMessage(message: string, userId: number = 99): Promise<string> {
@@ -25,7 +25,6 @@ export class ChatClient {
         user_id: userId,            // Matching your mock user ID 99 in backend
         message: message,
         context: {
-          // Add any frontend context here if needed (e.g., current page)
           source: "web_dashboard"
         }
       };
@@ -39,6 +38,7 @@ export class ChatClient {
       });
 
       if (!res.ok) {
+        console.error(`API Error: ${res.status} ${res.statusText}`);
         throw new Error(`API Error: ${res.status} ${res.statusText}`);
       }
 
@@ -53,3 +53,4 @@ export class ChatClient {
 }
 
 export const chatClient = new ChatClient();
+

@@ -26,7 +26,7 @@ async def get_comprehensive_rate(
     - Best transaction option
     """
     try:
-        return rater_service.get_comprehensive_rating(request)
+        return await rater_service.get_comprehensive_rating(request)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Rating failed: {str(e)}")
 
@@ -38,7 +38,7 @@ async def get_all_providers(
     """
     Get ratings for all available remittance providers.
     """
-    return rater_service.get_all_providers()
+    return await rater_service.get_all_providers()
 
 
 @router.get("/providers/{provider_name}", response_model=ProviderRating)
@@ -49,7 +49,7 @@ async def get_provider_rating(
     """
     Get detailed rating for a specific provider.
     """
-    return rater_service.get_provider_by_name(provider_name)
+    return await rater_service.get_provider_by_name(provider_name)
 
 
 @router.get("/route/{from_currency}/{to_currency}", response_model=RouteRating)
@@ -63,7 +63,7 @@ async def get_route_rating(
     """
     Get rating for a specific remittance route.
     """
-    return rater_service.rate_route(
+    return await rater_service.rate_route(
         from_currency=from_currency,
         to_currency=to_currency,
         from_country=from_country,
@@ -82,7 +82,7 @@ async def rate_transaction(
     """
     Rate a specific transaction with given parameters.
     """
-    return rater_service.rate_transaction(
+    return await rater_service.rate_transaction(
         amount=amount,
         from_currency=from_currency,
         to_currency=to_currency,

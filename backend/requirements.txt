@@ -11,3 +11,4 @@ requests
 thefuzz[speedup]
 uvicorn
 pysqlite3-binary
+httpx

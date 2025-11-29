@@ -1,43 +1,74 @@
 "use client"
 
-import { useState } from "react"
 import ChatInterface from "@/components/chat-interface"
+import ConnectWalletButton from "@/components/connect-wallet-button"
 import DexRates from "@/components/dex-rates"
 import RemittanceForm from "@/components/remittance-form"
-import TransactionHistory from "@/components/transaction-history"
+import { FloatingDock } from "@/components/ui/floating-dock"
 import WalletState from "@/components/wallet-state"
-import DashboardAnalytics from "@/components/dashboard-analytics"
-import SettingsPanel from "@/components/settings-panel"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card } from "@/components/ui/card"
-import { Send, TrendingUp, Wallet, History, BarChart3, Settings } from "lucide-react"
-import ConnectWalletButton from "@/components/connect-wallet-button"
+import { Send, TrendingUp, Wallet } from "lucide-react"
+import { useState } from "react"
 
+type ActiveSection = "chat" | "rates" | "send"
 
 export default function DashboardPage() {
-    const [activeTab, setActiveTab] = useState("chat")
+    const [activeSection, setActiveSection] = useState<ActiveSection>("chat")
 
-    console.log("RemitAI dashboard loaded")
+    const dockItems = [
+        {
+            title: "Chat",
+            icon: <Send className="w-full h-full" />,
+            href: "#chat",
+        },
+        {
+            title: "Rates",
+            icon: <TrendingUp className="w-full h-full" />,
+            href: "#rates",
+        },
+        {
+            title: "Send",
+            icon: <Wallet className="w-full h-full" />,
+            href: "#send",
+        }
+    ]
+
+    const handleDockItemClick = (section: ActiveSection) => {
+        setActiveSection(section)
+    }
+
+    const renderSection = () => {
+        switch (activeSection) {
+            case "chat":
+                return <ChatInterface />
+            case "rates":
+                return <DexRates />
+            case "send":
+                return <RemittanceForm />
+
+            default:
+                return <ChatInterface />
+        }
+    }
 
     return (
-        <main className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white pb-20">
+        <main className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-slate-900 dark:text-slate-50 pb-32">
             {/* Header */}
-            <div className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur border-b border-slate-700 px-4 py-4">
+            <div className="sticky top-0 z-40 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800 px-4 py-4">
                 <div className="max-w-2xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center font-bold text-slate-900">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20">
                             R
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-white">RemitAI</h1>
-                            <p className="text-xs text-slate-400">Powered by Cardano</p>
+                            <h1 className="text-xl font-bold text-slate-900 dark:text-white">RemitAI</h1>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Powered by Cardano</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <ConnectWalletButton />
-                        <div className="flex items-center gap-2 text-xs bg-slate-700 px-3 py-1 rounded-full">
-                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                            <span className="text-slate-300">Live</span>
+                        <div className="flex items-center gap-2 text-xs bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-3 py-1 rounded-full">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-slate-600 dark:text-slate-300">Live</span>
                         </div>
                     </div>
                 </div>
@@ -45,78 +76,29 @@ export default function DashboardPage() {
 
             {/* Main Content */}
             <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-                {/* Quick Stats */}
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                    <Card className="bg-slate-800 border-slate-700 p-4 text-center">
-                        <p className="text-xs text-slate-400 mb-1">Exchange Rate</p>
-                        <p className="text-lg font-bold text-cyan-400">1.12x</p>
-                    </Card>
-                    <Card className="bg-slate-800 border-slate-700 p-4 text-center">
-                        <p className="text-xs text-slate-400 mb-1">Avg Fee</p>
-                        <p className="text-lg font-bold text-green-400">0.5%</p>
-                    </Card>
-                    <Card className="bg-slate-800 border-slate-700 p-4 text-center sm:col-span-1">
-                        <p className="text-xs text-slate-400 mb-1">Speed</p>
-                        <p className="text-lg font-bold text-orange-400">&lt; 2min</p>
-                    </Card>
-                </div>
-
+               
                 {/* Wallet Section */}
                 <WalletState />
 
-                {/* Tabs */}
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-6 bg-slate-700/50 overflow-x-auto">
-                        <TabsTrigger value="chat" className="text-xs gap-1 flex items-center justify-center">
-                            <Send className="w-4 h-4" />
-                            <span className="hidden sm:inline">Chat</span>
-                        </TabsTrigger>
-                        <TabsTrigger value="rates" className="text-xs gap-1 flex items-center justify-center">
-                            <TrendingUp className="w-4 h-4" />
-                            <span className="hidden sm:inline">Rates</span>
-                        </TabsTrigger>
-                        <TabsTrigger value="send" className="text-xs gap-1 flex items-center justify-center">
-                            <Wallet className="w-4 h-4" />
-                            <span className="hidden sm:inline">Send</span>
-                        </TabsTrigger>
-                        <TabsTrigger value="history" className="text-xs gap-1 flex items-center justify-center">
-                            <History className="w-4 h-4" />
-                            <span className="hidden sm:inline">History</span>
-                        </TabsTrigger>
-                        <TabsTrigger value="analytics" className="text-xs gap-1 flex items-center justify-center">
-                            <BarChart3 className="w-4 h-4" />
-                            <span className="hidden sm:inline">Analytics</span>
-                        </TabsTrigger>
-                        <TabsTrigger value="settings" className="text-xs gap-1 flex items-center justify-center">
-                            <Settings className="w-4 h-4" />
-                            <span className="hidden sm:inline">Settings</span>
-                        </TabsTrigger>
-                    </TabsList>
+                {/* Dynamic Content Area */}
+                <div className="space-y-4">
+                    {renderSection()}
+                </div>
+            </div>
 
-                    <TabsContent value="chat" className="mt-6 space-y-4">
-                        <ChatInterface />
-                    </TabsContent>
-
-                    <TabsContent value="rates" className="mt-6 space-y-4">
-                        <DexRates />
-                    </TabsContent>
-
-                    <TabsContent value="send" className="mt-6 space-y-4">
-                        <RemittanceForm />
-                    </TabsContent>
-
-                    <TabsContent value="history" className="mt-6 space-y-4">
-                        <TransactionHistory />
-                    </TabsContent>
-
-                    <TabsContent value="analytics" className="mt-6 space-y-4">
-                        <DashboardAnalytics />
-                    </TabsContent>
-
-                    <TabsContent value="settings" className="mt-6 space-y-4">
-                        <SettingsPanel />
-                    </TabsContent>
-                </Tabs>
+            {/* Floating Dock Container */}
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+                <div onClick={(e) => {
+                    const target = e.target as HTMLElement
+                    const link = target.closest('a')
+                    if (link) {
+                        e.preventDefault()
+                        const section = link.href.split('#')[1] as ActiveSection
+                        handleDockItemClick(section)
+                    }
+                }}>
+                    <FloatingDock items={dockItems} />
+                </div>
             </div>
         </main>
     )

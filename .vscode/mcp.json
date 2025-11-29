@@ -1,0 +1,25 @@
+{
+	"servers": {
+		"prompt-kit": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"shadcn@canary",
+				"registry:mcp"
+			],
+			"env": {
+				"REGISTRY_URL": "https://www.prompt-kit.com/c/registry.json"
+			}
+		},
+		"shadcn": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"shadcn@latest",
+				"mcp"
+			]
+		}
+	},
+	"inputs": []
+}
