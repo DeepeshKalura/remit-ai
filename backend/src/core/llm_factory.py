@@ -19,7 +19,6 @@ class LLMFactory:
             )
             
         elif provider == "ollama":
-            # For Ollama, CrewAI expects 'ollama/model_name'
             return LLM(
                 model=f"ollama/{settings.OLLAMA_MODEL}",
                 base_url=settings.OLLAMA_BASE_URL,
@@ -29,6 +28,11 @@ class LLMFactory:
         if provider == "openrouter":
             return LLM(
                 model="tngtech/tng-r1t-chimera:free",
+            )
+        
+        if provider == "gemini":
+            return LLM(
+                model="gemini/gemini-2.5-flash"
             )
             
         # Add other providers (Azure, Anthropic) here easily

@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     ENCRYPTION_KEY: str = ""
     ADMIN_KEY: str = ""
     OPENROUTER_API_KEY:str = ""
+    GEMINI_API_KEY:str= ""
 
 
 
