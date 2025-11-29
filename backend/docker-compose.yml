@@ -1,9 +1,10 @@
+
 services:
   registry-service:
     image: ghcr.io/masumi-network/masumi-registry-service:0.22.0
     container_name: masumi-registry-service
     ports:
-      - "3001:3000"
+      - "3000:3000"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres-registry:5432/postgres?schema=public
       - ADMIN_KEY=${ADMIN_KEY}
