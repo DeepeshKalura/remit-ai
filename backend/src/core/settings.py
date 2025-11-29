@@ -1,12 +1,15 @@
 """
 Application Settings
 """
-
+import sys
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 load_dotenv()
 
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 class Settings(BaseSettings):
     """
