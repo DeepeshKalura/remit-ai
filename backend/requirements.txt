@@ -4,6 +4,12 @@ fastapi[all]
 gunicorn
 litellm
 ollama
+crewai
+crewai-tools
+fastapi[all]
+gunicorn
+litellm
+ollama
 pydantic-settings
 python-dotenv
 python-levenshtein
@@ -11,3 +17,6 @@ requests
 thefuzz[speedup]
 uvicorn
 pysqlite3-binary
+sqlmodel
+alembic
+aiosqlite

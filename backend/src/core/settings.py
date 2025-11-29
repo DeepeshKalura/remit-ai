@@ -7,16 +7,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 load_dotenv()
 
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
+# __import__('pysqlite3')
+# import sys
+# sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 class Settings(BaseSettings):
     """
     Config file for system
     """
 
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     CARDANO_BLOCKFROST_API_KEY: str
     CARDANO_NETWORK: str
