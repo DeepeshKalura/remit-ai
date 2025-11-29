@@ -44,6 +44,36 @@ async def search_payees(
     """
     return service.search_payees(user_id, q)
 
+@router.get("/{user_id}/payees", response_model=List[Payee])
+async def get_payees(
+    user_id: int,
+    service: UserService = Depends(get_user_service)
+):
+    """
+    Get all payees for a user.
+    """
+    return service.get_payees(user_id)
+
+@router.get("/{user_id}/payees", response_model=List[Payee])
+async def get_payees(
+    user_id: int,
+    service: UserService = Depends(get_user_service)
+):
+    """
+    Get all payees for a user.
+    """
+    return service.get_payees(user_id)
+
+@router.get("/{user_id}/payees", response_model=List[Payee])
+async def get_payees(
+    user_id: int,
+    service: UserService = Depends(get_user_service)
+):
+    """
+    Get all payees for a user.
+    """
+    return service.get_payees(user_id)
+
 # --- AI Utility ---
 
 @router.post("/tags/generate", response_model=TagResponse)

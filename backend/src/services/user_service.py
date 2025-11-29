@@ -150,6 +150,33 @@ class UserService:
                 
         return results
 
+    def get_payees(self, user_id: int) -> List[Payee]:
+        """
+        Get all payees for a user.
+        """
+        user = self.get_by_id(user_id)
+        if not user or not user.payees:
+            return []
+        return user.payees
+
+    def get_payees(self, user_id: int) -> List[Payee]:
+        """
+        Get all payees for a user.
+        """
+        user = self.get_by_id(user_id)
+        if not user or not user.payees:
+            return []
+        return user.payees
+
+    def get_payees(self, user_id: int) -> List[Payee]:
+        """
+        Get all payees for a user.
+        """
+        user = self.get_by_id(user_id)
+        if not user or not user.payees:
+            return []
+        return user.payees
+
     def search_by_name(self, name: str) -> List[User]:
         """
         Search for Users (Global directory) by name.
