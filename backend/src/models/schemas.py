@@ -2,6 +2,19 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
+from enum import Enum
+
+class RelationshipType(str, Enum):
+    FAMILY = "family"
+    FRIEND = "friend"
+    BUSINESS = "business"
+    OTHER = "other"
+
+class UserRelationship(BaseModel):
+    related_user_id: int
+    relation_name: str  # e.g., "Sister", "Boss", "Landlord"
+    type: RelationshipType
+
 # --- User Schemas ---
 class User(BaseModel):
     id: int
@@ -10,6 +23,8 @@ class User(BaseModel):
     wallet: str
     currency: str
     match_score: Optional[int] = None
+    tags: List[str] = []  
+    relationships: List[UserRelationship] = [] 
 
 class UserSearchResponse(BaseModel):
     users: List[User]
@@ -42,5 +57,7 @@ class QuoteResponse(BaseModel):
     expiry: datetime
 
 class ChatRequest(BaseModel):
+    conversation_id: str = "default" 
+    user_id: int 
     message: str
     context: Optional[Dict[str, Any]] = None

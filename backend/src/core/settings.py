@@ -42,7 +42,7 @@ class Settings(BaseSettings):
 
     # Masumi Protocol (MIP-003)
     # The URL of the local payment service (docker container)
-    PAYMENT_SERVICE_URL: str = "http://masumi-payment:3000/api/v1"
+    PAYMENT_SERVICE_URL: str = "http://localhost:3000/api/v1"
     PAYMENT_API_KEY: str = "dev-key" # Set this in the payment service env too
     
     # Your Agent's Identity on Masumi Network
@@ -50,8 +50,12 @@ class Settings(BaseSettings):
     SELLER_VKEY: str = "" # Your wallet verification key for receiving funds
     
     # Cardano
-    CARDANO_NETWORK: str = "testnet" # preprod / preview / mainnet
+    CARDANO_NETWORK: str = "prepoad" # preprod / preview / mainnet
 
+    BLOCKFROST_API_KEY_PREPROD: str = ""
+    ENCRYPTION_KEY: str = ""
+    ADMIN_KEY: str = ""
+    OPENROUTER_API_KEY:str = ""
 
 
 

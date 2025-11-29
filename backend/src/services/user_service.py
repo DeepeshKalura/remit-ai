@@ -3,12 +3,38 @@ from thefuzz import fuzz, process
 from src.models.schemas import User
 
 # Mock Database
+
 MOCK_USERS = [
-    {"id": 1, "name": "Dipisha Kalura", "country": "Finland", "wallet": "addr_test1qz8w9...", "currency": "EUR"},
-    {"id": 2, "name": "Rahul Sharma", "country": "India", "wallet": "addr_test1qx7y8...", "currency": "INR"},
-    {"id": 3, "name": "Alice Smith", "country": "USA", "wallet": "addr_test1qa2b3...", "currency": "USD"},
-    {"id": 4, "name": "Maria Garcia", "country": "Mexico", "wallet": "addr_test1qc4d5...", "currency": "MXN"},
-    {"id": 5, "name": "John Doe", "country": "Canada", "wallet": "addr_test1qe6f7...", "currency": "CAD"},
+    {
+        "id": 1, 
+        "name": "Dipisha Kalura", 
+        "country": "Finland", 
+        "wallet": "addr_test1qz8w9...", 
+        "currency": "EUR",
+        "tags": ["Family", "Priority"],
+        "relationships": []
+    },
+    {
+        "id": 2, 
+        "name": "Rahul Sharma", 
+        "country": "India", 
+        "wallet": "addr_test1qx7y8...", 
+        "currency": "INR",
+        "tags": ["Business"],
+        "relationships": []
+    },
+    {
+        "id": 99, 
+        "name": "Current User", 
+        "country": "USA", 
+        "wallet": "addr_test1_sender...", 
+        "currency": "USD",
+        "tags": [],
+        "relationships": [
+            {"related_user_id": 1, "relation_name": "sister", "type": "family"},
+            {"related_user_id": 2, "relation_name": "contractor", "type": "business"}
+        ]
+    }
 ]
 
 class UserService:
@@ -34,3 +60,19 @@ class UserService:
                 results.append(User(**user_data))
         
         return results
+    
+    def get_user_relationships(self, user_id: int) -> List[dict]:
+        user = self.get_by_id(user_id)
+        if not user: 
+            return []
+        
+        hydrated = []
+        for rel in user.relationships:
+            related_user = self.get_by_id(rel.related_user_id)
+            if related_user:
+                hydrated.append({
+                    "relation": rel.relation_name, 
+                    "name": related_user.name,     
+                    "country": related_user.country
+                })
+        return hydrated

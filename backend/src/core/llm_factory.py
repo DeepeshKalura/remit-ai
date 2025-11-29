@@ -25,6 +25,11 @@ class LLMFactory:
                 base_url=settings.OLLAMA_BASE_URL,
                 temperature=0.2
             )
+        
+        if provider == "openrouter":
+            return LLM(
+                model="tngtech/tng-r1t-chimera:free",
+            )
             
         # Add other providers (Azure, Anthropic) here easily
         return LLM(model=f"ollama/{settings.OLLAMA_MODEL}", base_url=settings.OLLAMA_BASE_URL)
