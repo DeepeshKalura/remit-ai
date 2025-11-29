@@ -1,13 +1,12 @@
 from crewai import Agent, Task, Crew, Process
 from src.core.llm_factory import LLMFactory
 from src.tools.agent_tools import RemitTools
-from src.services.user_service import UserService
 from src.services.context_service import ContextService
+from src.services.user_service import UserService
 
 class RemitAgentManager:
     def __init__(self):
         self.llm = LLMFactory.create_llm()
-        self.user_service = UserService()
         self.context_service = ContextService()
         
     def chat(self, user_message: str, context: dict = None) -> str:
@@ -19,8 +18,15 @@ class RemitAgentManager:
 
         chat_history = self.context_service.get_history(conversation_id)
         
-        relations = self.user_service.get_user_relationships(current_user_id)
+        # Create a fresh service with a fresh session
+        user_service = UserService() 
+        
+        relations = user_service.get_user_relationships(current_user_id)
         relations_str = f"KNOWN RELATIONSHIPS: {relations}" if relations else ""
+        
+        # We should close the session if UserService created it.
+        if hasattr(user_service, 'session'):
+             user_service.session.close()
 
         assistant = Agent(
             role='Remittance Assistant',
