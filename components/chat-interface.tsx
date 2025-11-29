@@ -1,16 +1,18 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { Send, Loader2, MessageCircle } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { chatClient } from "@/lib/chat-client";
+import { AlertCircle, Loader2, MessageCircle, Send } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface Message {
   id: string
   type: "user" | "ai"
   content: string
   timestamp: Date
+  isError?: boolean
 }
 
 export default function ChatInterface() {
@@ -19,7 +21,7 @@ export default function ChatInterface() {
       id: "1",
       type: "ai",
       content:
-        "Hello! I'm RemitAI. How can I help you send money today? You can ask me about exchange rates, fees, or I can guide you through sending a remittance.",
+        "Hello! I'm RemitAI. How can I help you send money today? I can check live DEX rates or help you find a recipient.",
       timestamp: new Date(),
     },
   ])
@@ -27,6 +29,7 @@ export default function ChatInterface() {
   const [loading, setLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // Auto-scroll to bottom
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
@@ -34,6 +37,7 @@ export default function ChatInterface() {
   const handleSend = async () => {
     if (!input.trim()) return
 
+    // 1. Create and display User Message immediately
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
@@ -45,36 +49,37 @@ export default function ChatInterface() {
     setInput("")
     setLoading(true)
 
-    // Simulate AI response - will be replaced with actual API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // 2. Call the Real Backend
+      const responseText = await chatClient.sendMessage(userMessage.content)
 
-    const aiResponses: Record<string, string> = {
-      rate: "Current ADA/USD rate is 1.12 with excellent liquidity on Minswap and SundaeSwap DEXes.",
-      fee: "Our fees are 0.5% on average, significantly lower than traditional remittance services.",
-      send: "I can help you send money right away! Which country are you sending to?",
-      default: "I'm here to help with your remittance needs. What would you like to know?",
+      // 3. Display AI Response
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: "ai",
+        content: responseText,
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, aiMessage])
+
+    } catch (error) {
+      // 4. Handle Errors Gracefully
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: "ai",
+        content: "I'm having trouble connecting to the backend. Is the Python server running on port 5000?",
+        timestamp: new Date(),
+        isError: true
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
+      setLoading(false)
     }
-
-    const lowerInput = input.toLowerCase()
-    let response = aiResponses.default
-    if (lowerInput.includes("rate")) response = aiResponses.rate
-    else if (lowerInput.includes("fee")) response = aiResponses.fee
-    else if (lowerInput.includes("send")) response = aiResponses.send
-
-    const aiMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      type: "ai",
-      content: response,
-      timestamp: new Date(),
-    }
-
-    setMessages((prev) => [...prev, aiMessage])
-    setLoading(false)
   }
 
   return (
     <div className="flex flex-col h-[500px] bg-slate-800/50 rounded-lg border border-slate-700 overflow-hidden">
-      {/* Chat Messages */}
+      {/* Chat Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full text-slate-400">
@@ -87,23 +92,32 @@ export default function ChatInterface() {
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}>
             <Card
-              className={`max-w-xs px-4 py-2 ${
+              className={`max-w-[85%] px-4 py-2 ${
                 msg.type === "user"
                   ? "bg-cyan-600 border-cyan-500 text-white"
-                  : "bg-slate-700 border-slate-600 text-slate-100"
+                  : msg.isError 
+                    ? "bg-red-900/50 border-red-500/50 text-red-200"
+                    : "bg-slate-700 border-slate-600 text-slate-100"
               }`}
             >
-              <p className="text-sm">{msg.content}</p>
-              <p className="text-xs mt-1 opacity-70">
+              <div className="flex items-start gap-2">
+                {msg.isError && <AlertCircle className="w-4 h-4 mt-0.5" />}
+                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+              </div>
+              <p className="text-[10px] mt-1 opacity-70 text-right">
                 {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </p>
             </Card>
           </div>
         ))}
+        
         {loading && (
           <div className="flex justify-start">
-            <Card className="bg-slate-700 border-slate-600 px-4 py-2">
-              <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
+            <Card className="bg-slate-700 border-slate-600 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
+                <span className="text-xs text-slate-400">Thinking...</span>
+              </div>
             </Card>
           </div>
         )}
@@ -119,7 +133,7 @@ export default function ChatInterface() {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSend()}
             disabled={loading}
-            className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
+            className="bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus-visible:ring-cyan-500"
           />
           <Button
             onClick={handleSend}
