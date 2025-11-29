@@ -2,13 +2,9 @@
 RemitAI Python Backend
 CrewAI-powered agent for remittance optimization
 """
-import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.core.settings import settings
-
-os.environ["HOME"] = "/tmp"
-os.environ["XDG_CACHE_HOME"] = "/tmp"
 
 # Import Routers
 from src.routers import users, chat
