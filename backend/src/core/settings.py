@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     ADMIN_KEY: str = ""
     OPENROUTER_API_KEY:str = ""
     GEMINI_API_KEY:str= ""
+    HOME:str="/tmp"
 
 
 
