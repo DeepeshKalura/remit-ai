@@ -27,7 +27,6 @@ app.add_middleware(
 
 # Register Routers
 app.include_router(users.router)
-# app.include_router(rates.router)
 app.include_router(chat.router)
 app.include_router(rater.router)
 

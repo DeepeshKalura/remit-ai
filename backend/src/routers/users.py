@@ -17,6 +17,13 @@ async def get_user(user_id: int, service: UserService = Depends(get_user_service
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+@router.get("/wallet/{wallet_address}", response_model=User)
+async def get_user_by_wallet(wallet_address: str, service: UserService = Depends(get_user_service)):
+    user = service.get_by_wallet(wallet_address)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
 # --- Payee Endpoints ---
 
 @router.post("/{user_id}/payees", response_model=Payee)
@@ -54,25 +61,8 @@ async def get_payees(
     """
     return service.get_payees(user_id)
 
-@router.get("/{user_id}/payees", response_model=List[Payee])
-async def get_payees(
-    user_id: int,
-    service: UserService = Depends(get_user_service)
-):
-    """
-    Get all payees for a user.
-    """
-    return service.get_payees(user_id)
 
-@router.get("/{user_id}/payees", response_model=List[Payee])
-async def get_payees(
-    user_id: int,
-    service: UserService = Depends(get_user_service)
-):
-    """
-    Get all payees for a user.
-    """
-    return service.get_payees(user_id)
+
 
 # --- AI Utility ---
 

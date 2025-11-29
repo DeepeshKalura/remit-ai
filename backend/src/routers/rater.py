@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from src.models.schemas import (
     RateRequest,
@@ -9,9 +10,16 @@ from src.models.schemas import (
 )
 from src.services.rater_service import RaterService
 from src.dependencies import get_rater_service
+from src.core.constant import current_support_for_ada_conversation
 
 router = APIRouter(prefix="/api/rater", tags=["Rater"])
 
+@router.get("/currencies")
+async def get_supported_currencies():
+    """
+    Get list of supported currencies for remittance.
+    """
+    return {"currencies": current_support_for_ada_conversation}
 
 @router.post("/rate", response_model=RateResponse)
 async def get_comprehensive_rate(
@@ -19,27 +27,25 @@ async def get_comprehensive_rate(
     rater_service: RaterService = Depends(get_rater_service)
 ):
     """
-    Get comprehensive rating for a remittance route including:
-    - Route rating (liquidity, speed, cost, reliability)
-    - Recommended providers
-    - Alternative routes
-    - Best transaction option
+    Get comprehensive rating: Real DEX data vs Competitor baselines.
     """
     try:
         return await rater_service.get_comprehensive_rating(request)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Rating failed: {str(e)}")
-
+        # Log error in production
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=f"Rating engine error: {str(e)}"
+        )
 
 @router.get("/providers", response_model=List[ProviderRating])
 async def get_all_providers(
     rater_service: RaterService = Depends(get_rater_service)
 ):
     """
-    Get ratings for all available remittance providers.
+    Get ratings for all tracked providers (Real + Baseline).
     """
     return await rater_service.get_all_providers()
-
 
 @router.get("/providers/{provider_name}", response_model=ProviderRating)
 async def get_provider_rating(
@@ -49,8 +55,10 @@ async def get_provider_rating(
     """
     Get detailed rating for a specific provider.
     """
-    return await rater_service.get_provider_by_name(provider_name)
-
+    provider = await rater_service.get_provider_by_name(provider_name)
+    if not provider or provider.overall_rating == 0:
+        raise HTTPException(status_code=404, detail="Provider not found")
+    return provider
 
 @router.get("/route/{from_currency}/{to_currency}", response_model=RouteRating)
 async def get_route_rating(
@@ -60,16 +68,9 @@ async def get_route_rating(
     to_country: str = "India",
     rater_service: RaterService = Depends(get_rater_service)
 ):
-    """
-    Get rating for a specific remittance route.
-    """
     return await rater_service.rate_route(
-        from_currency=from_currency,
-        to_currency=to_currency,
-        from_country=from_country,
-        to_country=to_country
+        from_currency, to_currency, from_country, to_country
     )
-
 
 @router.post("/transaction", response_model=TransactionRating)
 async def rate_transaction(
@@ -80,7 +81,7 @@ async def rate_transaction(
     rater_service: RaterService = Depends(get_rater_service)
 ):
     """
-    Rate a specific transaction with given parameters.
+    Calculate specific transaction metrics (Fees, Output, Impact).
     """
     return await rater_service.rate_transaction(
         amount=amount,

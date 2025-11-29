@@ -6,10 +6,16 @@ from typing import List, Optional
 from datetime import datetime
 from src.models.schemas import User, Payee, PayeeCreate
 from src.core.llm_factory import LLMFactory
+import httpx 
 
 DATA_FILE = "src/data/users.json"
 
 class UserService:
+    """
+    User operation in our platform
+    """
+    BASE_URL = "https://agg-api.minswap.org/aggregator/"
+
     def __init__(self):
         self.llm = LLMFactory.create_llm()
         self._ensure_data_file()
@@ -53,6 +59,11 @@ class UserService:
     def get_by_id(self, user_id: int) -> Optional[User]:
         users = self._load_users()
         user = next((u for u in users if u["id"] == user_id), None)
+        return User(**user) if user else None
+
+    def get_by_wallet(self, wallet_address: str) -> Optional[User]:
+        users = self._load_users()
+        user = next((u for u in users if u.get("wallet") == wallet_address), None)
         return User(**user) if user else None
 
     # --- Payee Logic ---
@@ -159,23 +170,6 @@ class UserService:
             return []
         return user.payees
 
-    def get_payees(self, user_id: int) -> List[Payee]:
-        """
-        Get all payees for a user.
-        """
-        user = self.get_by_id(user_id)
-        if not user or not user.payees:
-            return []
-        return user.payees
-
-    def get_payees(self, user_id: int) -> List[Payee]:
-        """
-        Get all payees for a user.
-        """
-        user = self.get_by_id(user_id)
-        if not user or not user.payees:
-            return []
-        return user.payees
 
     def search_by_name(self, name: str) -> List[User]:
         """
@@ -183,3 +177,17 @@ class UserService:
         """
         users = self.get_all()
         return [u for u in users if name.lower() in u.name.lower()]
+
+    async def fetch_user_wallet(self, wallet_address: str, amount_in_decimal: bool = True):
+        """
+        Query wallet balances and token information.
+        """
+        url = f"{self.BASE_URL}wallet"
+        payload = {
+            "wallet": wallet_address,
+            "amount_in_decimal": amount_in_decimal
+        }
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, json=payload)
+            response.raise_for_status()  # Raise an exception for bad status codes
+            return response.json()

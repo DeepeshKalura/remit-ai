@@ -10,6 +10,7 @@ dependencies = [
     "fastapi[all]>=0.121.2",
     "gunicorn>=23.0.0",
     "litellm>=1.80.7",
+    "loguru>=0.7.3",
     "ollama>=0.6.1",
     "pydantic-settings",
     "pysqlite3-binary>=0.5.4",

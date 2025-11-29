@@ -3,13 +3,13 @@
         "id": 99,
         "name": "Admin User",
         "country": "USA",
-        "wallet": "stake_test1uz3su7jveyx8hnuwmj3hfx3xwyplqscusr5fxm8g0pfwn4gz0y6cx",
+        "wallet": "addr_test1qq2tcg967u8yktxlgux9a9zj005jxjfyjg93d0fk5w7szhjfn7lrlnggyaqt65fn2vrwpznpwsyu6kg2znggj0rnr94q78vk4q",
         "currency": "USD",
         "payees": [
             {
                 "id": "de7e9967",
                 "name": "Dipisha Kalura",
-                "wallet_address": "stake_test1uz3su7jveyx8hnuwmj3hfx3xwyplqscusr5fxm8g0pfwn4gz0y6cx",
+                "wallet_address": "addr_test1qrmatet32euhulze7yh0ge72q0rwul4qs0gltcvnxny8599rpeayejgv008cah9rwjdzvugr7pp3eq8gjdkws7zja82smavwkv",
                 "country": "Finland",
                 "currency": "Euro",
                 "tags": [
