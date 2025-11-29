@@ -16,6 +16,7 @@ dependencies = [
     "python-levenshtein>=0.27.3",
     "requests>=2.31.0",
     "thefuzz[speedup]>=0.22.1",
+    "uvicorn>=0.38.0",
 ]
 
 [dependency-groups]
