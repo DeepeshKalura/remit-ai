@@ -49,6 +49,9 @@ def deploy():
     env_data["ENABLE_ORYX_BUILD"] = "true"
     env_data["LLM_PROVIDER"] = "openai" # Force provider for Prod
 
+    env_data["SCM_COMMAND_IDLE_TIMEOUT"] = "1800" 
+    env_data["WEBSITES_CONTAINER_START_TIME_LIMIT"] = "1800"
+
     # Convert to space-separated string for AZ CLI (Key=Value)
     # We quote the value to handle spaces safely
     settings_list = [f'{k}="{v}"' for k, v in env_data.items()]

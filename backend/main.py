@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.core.settings import settings
 
 # Import Routers
-from src.routers import users, chat
+from src.routers import users, chat, rater
 from src.agents import masumi_agent
 
 app = FastAPI(
@@ -29,6 +29,7 @@ app.add_middleware(
 app.include_router(users.router)
 # app.include_router(rates.router)
 app.include_router(chat.router)
+app.include_router(rater.router)
 
 # Masumi Protocol
 app.include_router(masumi_agent.router)

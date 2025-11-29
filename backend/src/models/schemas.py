@@ -61,3 +61,60 @@ class ChatRequest(BaseModel):
     user_id: int 
     message: str
     context: Optional[Dict[str, Any]] = None
+
+# --- Rater Service Schemas ---
+class ProviderRating(BaseModel):
+    """Rating for a remittance provider"""
+    provider_name: str
+    reliability_score: float  # 0-100
+    speed_score: float        # 0-100
+    cost_score: float         # 0-100
+    overall_rating: float     # 0-5 stars
+    reviews_count: int
+    average_time_hours: float
+    
+class RouteRating(BaseModel):
+    """Rating for a specific remittance route (e.g., USD->INR)"""
+    route_id: str
+    from_currency: str
+    to_currency: str
+    from_country: str
+    to_country: str
+    liquidity_score: float    # 0-100
+    speed_rating: float       # 0-5
+    cost_rating: float        # 0-5
+    reliability_rating: float # 0-5
+    total_volume_24h: float
+    average_rate: float
+    best_providers: List[str] = []
+    
+class TransactionRating(BaseModel):
+    """Rating for a completed/potential transaction"""
+    transaction_id: Optional[str] = None
+    amount: float
+    from_currency: str
+    to_currency: str
+    provider: str
+    estimated_time_hours: float
+    fee_percentage: float
+    total_cost: float
+    rate_quality_score: float # 0-100 (compared to market)
+    recommended: bool
+    risk_level: str = "low"   # low, medium, high
+    
+class RateRequest(BaseModel):
+    """Request to rate a remittance route or transaction"""
+    from_currency: str
+    to_currency: str
+    amount: float
+    from_country: Optional[str] = None
+    to_country: Optional[str] = None
+    preferred_speed: Optional[str] = "normal"  # fast, normal, economy
+    
+class RateResponse(BaseModel):
+    """Response containing ratings and recommendations"""
+    route_rating: RouteRating
+    recommended_providers: List[ProviderRating]
+    alternative_routes: List[RouteRating] = []
+    best_transaction: TransactionRating
+    timestamp: datetime
