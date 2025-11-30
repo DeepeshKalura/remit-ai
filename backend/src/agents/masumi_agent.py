@@ -1,10 +1,15 @@
+# /src/agents/masumi_agent.py
+
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 from src.agents.remit_agent import RemitAgentManager
 from src.core.settings import settings
+from src.services.masumi_service import masumi_service 
+from loguru import logger
+import uuid
 
-router = APIRouter(tags=["Masumi Protocol (MIP-003)"])
+router = APIRouter(prefix="/api/masumi", tags=["Masumi Protocol (MIP-003)"])
 agent_manager = RemitAgentManager()
 
 # --- MIP-003 Models ---
@@ -21,7 +26,6 @@ class InputSchema(BaseModel):
     input_schema_definition: Dict[str, Any]
 
 # --- Endpoints ---
-
 @router.get("/availability")
 async def check_availability():
     """MIP-003: Check if the agent is ready to accept jobs."""
@@ -48,17 +52,24 @@ job_store = {}
 @router.post("/start_job")
 async def start_job(request: JobRequest, background_tasks: BackgroundTasks):
     """MIP-003: Start a paid job."""
-    # 1. Verify Payment (Simplified for local dev)
-    if settings.SELLER_VKEY and not request.payment_tx_hash:
-        # In real Masumi, you verify the tx with the Payment Service here
-        pass 
+    # 1. Verify Payment
+    if settings.SELLER_VKEY: # SELLER_VKEY being set indicates that payment is required
+        if not request.payment_tx_hash:
+            raise HTTPException(status_code=402, detail="Payment required: payment_tx_hash is missing.")
+        
+        is_paid = await masumi_service.verify_payment(request.payment_tx_hash)
+        if not is_paid:
+            raise HTTPException(status_code=402, detail="Payment not confirmed or invalid. Please ensure the transaction is confirmed on the blockchain.")
 
-    job_id = f"job_{len(job_store) + 1}"
+    job_id = f"job_{uuid.uuid4()}"
     job_store[job_id] = {"status": "processing", "result": None}
 
     # Run Agent in Background
-    # cleaby    
-    background_tasks.add_task(run_agent_task, job_id, request.input.get("message", ""))
+    message = request.input.get("message")
+    if not message:
+        raise HTTPException(status_code=400, detail="Input 'message' is required.")
+        
+    background_tasks.add_task(run_agent_task, job_id, message, request.input.get("context"))
 
     return {"job_id": job_id, "status": "processing"}
 
@@ -71,10 +82,22 @@ async def get_job_status(job_id: str):
     return job
 
 # --- Background Worker ---
-async def run_agent_task(job_id: str, message: str):
+async def run_agent_task(job_id: str, message: str, context: Optional[dict]):
+    """
+    Executes the agent's chat logic and stores the final result.
+    This now correctly handles the async generator from the agent.
+    """
     try:
-        # Calls the SAME agent logic as your chat API
-        result = agent_manager.chat(message)
-        job_store[job_id] = {"status": "completed", "result": result}
+        logger.info(f"Starting background task for job_id: {job_id}")
+        
+        result_chunks = []
+        async for chunk in agent_manager.chat(message, context):
+            result_chunks.append(chunk)
+        
+        final_result = "".join(result_chunks)
+        
+        job_store[job_id] = {"status": "completed", "result": final_result}
+        logger.success(f"Completed background task for job_id: {job_id}")
     except Exception as e:
+        logger.error(f"Background task for job_id {job_id} failed: {e}")
         job_store[job_id] = {"status": "failed", "error": str(e)}

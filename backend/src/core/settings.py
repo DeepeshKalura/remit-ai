@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     MASUMI_API_KEY: str
     MASUMI_TESTNET: bool = True # Use bool for true/false values
     MASUMI_PAYMENT_SERVICE_URL: str
+    MASUMI_REGISTRY_SERVICE_URL: str
     ENCRYPTION_KEY: str
     ADMIN_KEY: str
 
