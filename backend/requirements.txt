@@ -14,3 +14,4 @@ pysqlite3-binary
 httpx
 langchain-core
 loguru
+masumi

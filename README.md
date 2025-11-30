@@ -1,212 +1,130 @@
-# RemitAI - AI-Powered Remittances on Cardano
+# RemitAI
 
-**Send international remittances instantly with AI-optimized routing and Cardano blockchain security.**
+RemitAI is a next-generation remittance optimization platform that leverages AI agents and the Cardano blockchain to provide secure, efficient, and intelligent cross-border payment solutions.
 
-## Features
+## 🌟 Features
 
-- 🤖 **AI Chat Assistant** - Ask questions about rates, fees, and get remittance guidance
-- 💱 **Live DEX Aggregation** - Real-time rates from Minswap and SundaeSwap
-- 📊 **Analytics Dashboard** - Track volume, destinations, and transaction trends
-- 💼 **Wallet Integration** - Connect Nami, Eternl, or Flint wallets (CIP-30)
-- ⚡ **Masumi Testnet** - Instant settlement to 100+ countries
-- 🔐 **Blockchain Secured** - Transactions on Cardano testnet
-- 📱 **Mobile First** - Responsive design optimized for emerging markets
+- **AI-Powered Optimization**: Uses CrewAI agents to find the best remittance routes and rates.
+- **Blockchain Integration**: Built on Cardano using the Mesh SDK for secure and transparent transactions.
+- **Masumi Protocol**: Implements MIP-003 standard for agentic payments.
+- **Modern UI**: sleek, responsive interface built with Next.js and Tailwind CSS.
 
-## Quick Start
+## 🏗 Architecture
+
+The project consists of two main components:
+
+- **Frontend**: A Next.js application (`/app`) that provides the user interface for sending money, managing wallets, and interacting with AI agents.
+- **Backend**: A FastAPI service (`/backend`) that hosts the AI agents, handles business logic, and interacts with the Masumi Protocol.
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- Python 3.10 > 3.14 (for backend)
-- Cardano wallet (Nami, Eternl, or Flint)
 
-### Frontend Setup
+Ensure you have the following installed:
+
+- **Node.js** (v18 or higher)
+- **pnpm** (Package manager)
+- **Python** (v3.10 or higher)
+- **Git**
+
+### 1. Clone the Repository
+
 ```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Open http://localhost:3000
+git clone <repository-url>
+cd remit-ai
 ```
 
-### Backend Setup
-```bash
-cd backend
+### 2. Frontend Setup
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate
+The frontend is a Next.js application located in the root directory.
 
-# Install dependencies
-pip install -r requirements.txt
+1.  **Install Dependencies**:
+    ```bash
+    pnpm install
+    ```
 
-# Configure environment
-cp .env.example .env
-# Edit .env with your API keys
+2.  **Configure Environment**:
+    Copy the example environment file:
+    ```bash
+    cp .env.example .env
+    ```
+    Update `.env` with your configuration:
+    - `NEXT_PUBLIC_BACKEND_URL`: URL of your backend service (default: `http://localhost:5000`)
+    - `NEXT_PUBLIC_API_URL`: API URL (default: `http://localhost:8000`)
 
-# Run backend
-python src/main.py
-```
+3.  **Run Development Server**:
+    ```bash
+    pnpm dev
+    ```
+    The app will be available at `http://localhost:3000`.
 
-Backend runs on `http://localhost:5000`
+### 3. Backend Setup
 
-## Architecture
+The backend is a Python FastAPI application located in the `backend/` directory.
 
-```
-RemitAI
-├── Frontend (Next.js 16)
-│   ├── Chat Interface
-│   ├── DEX Rates Display
-│   ├── Remittance Form
-│   ├── Transaction History
-│   ├── Analytics Dashboard
-│   └── Settings
-├── Backend (Python/CrewAI)
-│   ├── DEX Analyzer Agent
-│   ├── Rate Optimizer Agent
-│   ├── Blockfrost Integration
-│   └── Masumi Integration
-└── Blockchain
-    ├── Cardano Testnet
-    ├── Nami/Eternl/Flint Wallets
-    └── CIP-30 Standard
-```
+1.  **Navigate to Backend**:
+    ```bash
+    cd backend
+    ```
 
-## Tech Stack
+2.  **Create Virtual Environment**:
+    ```bash
+    python -m venv .venv
+    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+    ```
 
-- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS
-- **Backend**: Python, CrewAI, Blockfrost API
-- **Blockchain**: Cardano Testnet
-- **Integrations**: Masumi (testnet), DEX APIs
-- **Deployment**: Vercel (frontend), Python hosting (backend)
+3.  **Install Dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-## Key Workflows
+4.  **Configure Environment**:
+    Copy the example environment file:
+    ```bash
+    cp .env.example .env
+    ```
+    Update `.env` with your API keys (see [API Keys](#-api-keys--documentation) below).
 
-### 1. Wallet Connection
-1. Click "Connect Wallet"
-2. Select wallet (Nami/Eternl/Flint)
-3. Approve connection
-4. View balance and address
+5.  **Run Backend Server**:
+    ```bash
+    uvicorn main:app --reload --port 8000
+    ```
+    The API will be available at `http://localhost:8000`.
+    API Documentation (Swagger UI) is available at `http://localhost:8000/docs`.
 
-### 2. Send Remittance
-1. Enter amount in ADA
-2. Select recipient country
-3. Get live quote
-4. Enter recipient phone
-5. Sign with wallet
-6. Submit to Masumi
-7. Receive confirmation
+## 🔑 API Keys & Documentation
 
-### 3. Track Transaction
-1. View transaction history
-2. Check blockchain status
-3. Verify settlement
+To run the application, you will need API keys from the following services:
 
-## API Endpoints
+| Service | Description | Get API Key |
+|---------|-------------|-------------|
+| **Blockfrost** | Required for interacting with the Cardano blockchain. | [Get Blockfrost Key](https://blockfrost.io/) |
+| **OpenAI** | Required for the AI agents (CrewAI). | [Get OpenAI Key](https://platform.openai.com/api-keys) |
+| **Masumi Network** | Required for the Masumi Protocol integration. | [Masumi Documentation](https://docs.masumi.network/) |
 
-### Frontend API Routes (/app/api)
-- `POST /masumi/quote` - Get remittance quote
-- `POST /masumi/transaction` - Create transaction
-- `POST /masumi/payment` - Submit payment
-- `GET /masumi/status` - Check transaction status
+### Backend Environment Variables Detail
 
-### Backend API Routes (/backend-setup)
-- `POST /api/analyze` - DEX rate analysis
-- `POST /api/optimize` - Route optimization
-- `POST /api/quote` - Create Masumi quote
-- `GET /api/rates` - Aggregated rates
-- `GET /api/status` - Transfer status
-- `GET /health` - Health check
+- `CARDANO_BLOCKFROST_API_KEY`: Your Blockfrost project ID.
+- `OPENAI_API_KEY`: Your OpenAI API key.
+- `MASUMI_API_KEY`: Your Masumi Network API key.
+- `ENCRYPTION_KEY`: A secure random string (min 32 chars) for encrypting wallet secrets.
+- `ADMIN_KEY`: A secure string for admin authentication.
+- `BLOCKFROST_API_KEY_PREPROD`: Specific key for Cardano Preprod network (if using testnet).
 
-## Configuration
+## 🛠 Tech Stack
 
-### Environment Variables
+- **Frontend**: Next.js 15, React 19, Tailwind CSS, Radix UI, Mesh SDK.
+- **Backend**: FastAPI, CrewAI, LangChain, Pydantic.
+- **Blockchain**: Cardano (Preprod/Mainnet).
 
-**Frontend (.env.local)**
-```
-NEXT_PUBLIC_CREWAI_BACKEND_URL=http://localhost:5000
-NEXT_PUBLIC_MASUMI_TESTNET=true
-```
+## 🤝 Contributing
 
-**Backend (.env)**
-```
-CARDANO_BLOCKFROST_API_KEY=your_key
-CARDANO_NETWORK=testnet
-MASUMI_API_KEY=your_key
-OPENAI_API_KEY=your_key
-```
+1.  Fork the repository.
+2.  Create a feature branch (`git checkout -b feature/amazing-feature`).
+3.  Commit your changes (`git commit -m 'Add some amazing feature'`).
+4.  Push to the branch (`git push origin feature/amazing-feature`).
+5.  Open a Pull Request.
 
+## 📄 License
 
-## Deployment
-
-### Vercel (Frontend)
-1. Push to GitHub
-2. Connect to Vercel
-3. Auto-deploys on push
-
-### Backend Options
-- **Heroku**: Simple deployment with Procfile
-- **AWS Lambda**: Serverless with Chalice
-- **DigitalOcean**: VPS with Gunicorn
-
-See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for details.
-
-## Demo Video
-
-[Watch RemitAI Demo on YouTube](#)
-
-For creating your own demo, see [DEMO_VIDEO_GUIDE.md](DEMO_VIDEO_GUIDE.md)
-
-## Supported Countries
-
-- Philippines (PHP)
-- Vietnam (VND)
-- India (INR)
-- Mexico (MXN)
-- Kenya (KES)
-
-*More countries coming soon*
-
-## Security
-
-- CIP-30 wallet standard
-- Cardano testnet
-- Masumi testnet integration
-- 2FA support
-- Environment variable management
-- No private key storage in app
-
-## Roadmap
-
-- [ ] Mainnet deployment
-- [ ] Multi-currency support
-- [ ] Mobile app (React Native)
-- [ ] KYC/AML compliance
-- [ ] Advanced AI agents
-- [ ] Automated routing optimization
-- [ ] Fiat on/off ramps
-- [ ] Community features
-
-## Contributing
-
-Contributions welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Acknowledgments
-
-- Built with Next.js, React, and Tailwind CSS
-- Cardano ecosystem
-- Masumi for payment infrastructure
-- CrewAI for agent orchestration
-
----
-
-**Made with 💜 for the Cardano community**
-
+This project is licensed under the MIT License.
