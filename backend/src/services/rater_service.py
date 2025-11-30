@@ -1,5 +1,3 @@
-# Rationale:
-
 import httpx
 import sys
 from typing import Dict, Any, List, Optional

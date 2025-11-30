@@ -7,6 +7,7 @@ from datetime import datetime
 from src.models.schemas import User, Payee, PayeeCreate
 from src.core.llm_factory import LLMFactory
 import httpx 
+from thefuzz import fuzz
 
 DATA_FILE = "src/data/users.json"
 
@@ -137,29 +138,42 @@ class UserService:
         self._save_users(users)
         
         return Payee(**new_payee)
+    
 
     def search_payees(self, user_id: int, query: str) -> List[Payee]:
         """
-        Search a user's payee list by Name or Tags.
+        Search a user's payee list by Name or Tags using fuzzy matching.
+        Returns results sorted by relevance.
         """
         user = self.get_by_id(user_id)
         if not user or not user.payees:
             return []
-        
+
         query = query.lower().strip()
-        results = []
-        
+        # If the search query is empty, return all payees.
+        if not query:
+            return user.payees
+
+        results_with_scores = []
+        SCORE_THRESHOLD = 75  # We only want reasonably close matches.
+
         for p in user.payees:
-            # Check for match in Name
-            name_match = query in p.name.lower()
+            # Calculate match scores for the name and each tag.
+            name_score = fuzz.partial_ratio(query, p.name.lower())
+            tag_scores = [fuzz.partial_ratio(query, t.lower()) for t in p.tags] if p.tags else [0]
             
-            # Check for match in Tags
-            tag_match = any(query in t.lower() for t in p.tags)
-            
-            if name_match or tag_match:
-                results.append(p)
-                
-        return results
+            # The payee's relevance is its highest score.
+            highest_score = max([name_score] + tag_scores)
+
+            if highest_score >= SCORE_THRESHOLD:
+                results_with_scores.append((p, highest_score))
+
+        # Sort results by score, from highest to lowest.
+        sorted_results = sorted(results_with_scores, key=lambda item: item[1], reverse=True)
+
+        # Return only the Payee objects, now in the correct order.
+        return [payee for payee, score in sorted_results]
+    
 
     def get_payees(self, user_id: int) -> List[Payee]:
         """
