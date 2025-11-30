@@ -70,49 +70,6 @@ export default function LandingPage() {
           </Card>
         </div>
       </div>
-
-      {/* Stats Section */}
-      <div className="max-w-7xl mx-auto px-4 py-20 border-t border-slate-200 dark:border-slate-800">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          <div>
-            <div className="text-5xl font-bold bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent mb-2">
-              0.5%
-            </div>
-            <p className="text-slate-600 dark:text-slate-400 text-lg">Average Fee</p>
-          </div>
-          <div>
-            <div className="text-5xl font-bold bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent mb-2">
-              &lt;2min
-            </div>
-            <p className="text-slate-600 dark:text-slate-400 text-lg">Transfer Time</p>
-          </div>
-          <div>
-            <div className="text-5xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent mb-2">
-              5+
-            </div>
-            <p className="text-slate-600 dark:text-slate-400 text-lg">Countries Supported</p>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="max-w-7xl mx-auto px-4 py-20">
-        <Card className="bg-gradient-to-r from-blue-500 to-cyan-500 border-0 p-12 text-center">
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-            Ready to Send Money?
-          </h2>
-          <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
-            Join thousands of users who trust RemitAI for their international transfers
-          </p>
-          <button
-            onClick={handleGetStarted}
-            className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-lg font-bold text-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
-          >
-            Get Started Now
-            <ArrowRight className="w-5 h-5" />
-          </button>
-        </Card>
-      </div>
     </main>
   )
 }

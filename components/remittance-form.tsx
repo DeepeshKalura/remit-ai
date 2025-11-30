@@ -1,24 +1,41 @@
-// components/remittance-form.tsx
-
 "use client"
+
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
 import { raterClient } from "@/lib/rater-client"
 import type { RateResponse } from "@/types/rater"
 import { Transaction } from "@meshsdk/core"
 import { useWallet } from "@meshsdk/react"
-import { AlertCircle, ArrowRight, CheckCircle2, ExternalLink, Loader2, RefreshCw, Search, TrendingUp, Zap } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { 
+  AlertCircle, 
+  ArrowRight, 
+  CheckCircle2, 
+  ExternalLink, 
+  Loader2, 
+  RefreshCw, 
+  Search, 
+  TrendingUp, 
+  Zap,
+  Wallet,
+  Globe,
+  User,
+  Coins,
+  ArrowDownUp,
+  Sparkles
+} from "lucide-react"
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
 
 interface ExtendedQuote extends RateResponse {
-  sendAmount: number;
-  recipientAddress: string;
+  sendAmount: number
+  recipientAddress: string
 }
 
 interface Payee {
@@ -79,7 +96,9 @@ export default function RemittanceForm() {
           setUserId(user.id)
           fetchPayees(user.id)
         }
-      } catch (e) { console.error("Error identifying user:", e) }
+      } catch (e) {
+        console.error("Error identifying user:", e)
+      }
     }
     identifyUser()
   }, [connected, wallet])
@@ -92,37 +111,36 @@ export default function RemittanceForm() {
         setPayees(data)
         setFilteredPayees(data)
       }
-    } catch (e) { console.error("Failed to fetch payees", e) }
+    } catch (e) {
+      console.error("Failed to fetch payees", e)
+    }
   }
 
-  // --- DEBOUNCING LOGIC ---
+  // Debouncing Logic
   useEffect(() => {
-    // If there's no query, just show the full list of payees.
     if (!payeeSearchQuery) {
-        setFilteredPayees(payees);
-        return;
+      setFilteredPayees(payees)
+      return
     }
 
-    // Set a timer to execute the search after 300ms.
     const debounceTimer = setTimeout(async () => {
-        if (!userId) return;
+      if (!userId) return
 
-        try {
-            // Call the search endpoint on the backend.
-            const res = await fetch(`http://localhost:8000/api/users/${userId}/payees/search?q=${encodeURIComponent(payeeSearchQuery)}`);
-            if (res.ok) {
-                const data = await res.json();
-                setFilteredPayees(data);
-            }
-        } catch (e) {
-            console.error("Search failed:", e);
+      try {
+        const res = await fetch(
+          `http://localhost:8000/api/users/${userId}/payees/search?q=${encodeURIComponent(payeeSearchQuery)}`
+        )
+        if (res.ok) {
+          const data = await res.json()
+          setFilteredPayees(data)
         }
-    }, 300); // Wait for 300ms after user stops typing.
+      } catch (e) {
+        console.error("Search failed:", e)
+      }
+    }, 300)
 
-    // Cleanup: Clear the timer if the user types again before it fires.
-    return () => clearTimeout(debounceTimer);
-  }, [payeeSearchQuery, payees, userId]);
-
+    return () => clearTimeout(debounceTimer)
+  }, [payeeSearchQuery, payees, userId])
 
   // Close search dropdown when clicking outside
   useEffect(() => {
@@ -205,116 +223,435 @@ export default function RemittanceForm() {
     }
   }
 
+  const resetForm = () => {
+    setSubmitted(false)
+    setQuote(null)
+    setSendAmount("")
+    setRecipientAddress("")
+    setTxHash("")
+    setCurrency("")
+    setPayeeSearchQuery("")
+    setSelectedPayee(null)
+    setError("")
+  }
+
+  // Success State
   if (submitted) {
     return (
-      <Card className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-green-500/30 p-6 text-center">
-        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle2 className="w-8 h-8 text-white" />
-        </div>
-        <h3 className="text-xl font-semibold text-green-400 mb-2">Transaction Submitted!</h3>
-        <p className="text-slate-300 text-sm mb-1">
-          Successfully sent <span className="font-bold text-cyan-400">{sendAmount} ADA</span>
-        </p>
-        <div className="bg-slate-900/50 p-3 rounded mb-6 text-left">
-          <p className="text-xs text-slate-500 mb-1">Blockchain Hash:</p>
-          <div className="flex items-center gap-2">
-            <code className="text-xs text-cyan-400 break-all font-mono flex-1">{txHash}</code>
-            <a href={`https://preprod.cardanoscan.io/transaction/${txHash}`} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white flex-shrink-0">
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          </div>
-        </div>
-        <Button onClick={() => { setSubmitted(false); setQuote(null); setSendAmount(""); setRecipientAddress(""); setTxHash(""); setCurrency(""); setPayeeSearchQuery(""); }} variant="outline" className="w-full border-slate-600 text-slate-300 hover:bg-slate-700">
-          Send Another
-        </Button>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Card className="border-chart-2/30 bg-card overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-chart-2 to-chart-4" />
+          <CardContent className="p-8 text-center">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              className="w-20 h-20 bg-chart-2/20 rounded-full flex items-center justify-center mx-auto mb-6"
+            >
+              <CheckCircle2 className="w-10 h-10 text-chart-2" />
+            </motion.div>
+
+            <h3 className="text-2xl font-bold text-card-foreground mb-2">
+              Transaction Successful!
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              Your transfer has been submitted to the blockchain
+            </p>
+
+            <div className="bg-secondary rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-muted-foreground">Amount Sent</span>
+                <span className="text-lg font-bold text-chart-1">{sendAmount} ADA</span>
+              </div>
+              <Separator className="my-3" />
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">Transaction Hash</p>
+                <div className="flex items-center gap-2 bg-background rounded-lg p-3">
+                  <code className="text-xs text-chart-1 break-all font-mono flex-1">
+                    {txHash}
+                  </code>
+                  <a
+                    href={`https://preprod.cardanoscan.io/transaction/${txHash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              onClick={resetForm}
+              variant="outline"
+              className="w-full border-border text-foreground hover:bg-accent"
+            >
+              <ArrowDownUp className="w-4 h-4 mr-2" />
+              Send Another Transfer
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
     )
   }
 
   return (
-    <>
-      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
-        {error && (
-          <Card className="bg-red-500/10 border-red-500/30 p-3 flex gap-2 animate-in fade-in slide-in-from-top-2">
-            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-400">{error}</p>
-          </Card>
-        )}
-        <div className="space-y-2">
-          <Label htmlFor="amount" className="text-white">Send Amount (ADA)</Label>
-          <Input id="amount" type="number" placeholder="0.00" value={sendAmount} onChange={(e) => setSendAmount(e.target.value)} className="bg-slate-700 border-slate-600 text-white placeholder-slate-400 text-lg" step="1" min="1" disabled={loading} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="currency" className="text-white">Receiving Currency</Label>
-          <Select value={currency} onValueChange={setCurrency} disabled={loading}>
-            <SelectTrigger className="bg-slate-700 border-slate-600 text-white"><SelectValue placeholder="Select currency" /></SelectTrigger>
-            <SelectContent className="bg-slate-700 border-slate-600 max-h-[200px]">
-              {supportedCurrencies.map((curr) => (<SelectItem key={curr} value={curr.toUpperCase()}>{curr.toUpperCase()}</SelectItem>))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2 relative" ref={searchRef}>
-          <Label htmlFor="payee" className="text-white">Recipient</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input id="payee" type="text" placeholder="Search payee or enter wallet address..." value={payeeSearchQuery} onChange={handlePayeeInputChange} onFocus={() => setPayeeSearchOpen(true)} className="bg-slate-700 border-slate-600 text-white placeholder-slate-400 pl-9" disabled={loading} autoComplete="off" />
-          </div>
-          {payeeSearchOpen && userId && (
-            <div className="absolute z-10 w-full bg-slate-800 border border-slate-700 rounded-md shadow-xl mt-1 max-h-[200px] overflow-y-auto">
-              {filteredPayees.length > 0 ? (
-                filteredPayees.map((payee) => (
-                  <button key={payee.id} type="button" onClick={() => handleSelectPayee(payee)} className="w-full text-left px-4 py-2 hover:bg-slate-700 transition-colors flex items-center justify-between group">
-                    <div>
-                      <p className="text-sm text-white font-medium">{payee.name}</p>
-                      <p className="text-xs text-slate-400 truncate max-w-[200px]">{payee.wallet_address}</p>
-                    </div>
-                    <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-400">{payee.currency}</Badge>
-                  </button>
-                ))
-              ) : (
-                <div className="p-4 text-center">
-                  <p className="text-sm text-slate-400">No saved payees found.</p>
-                  <p className="text-xs text-slate-500 mt-1">Enter a wallet address manually.</p>
-                </div>
-              )}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <Card className="border-border bg-card overflow-hidden shadow-lg">
+        {/* Header Gradient Bar */}
+        <div className="h-1 bg-gradient-to-r from-chart-1 via-chart-2 to-chart-4" />
+
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Coins className="w-5 h-5 text-primary" />
             </div>
-          )}
-        </div>
-        {!quote && (
-          <Button type="button" onClick={handleGenerateQuote} disabled={!sendAmount || !currency || !recipientAddress || loading} className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-semibold">
-            {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Getting Live Rates...</> : <><TrendingUp className="w-4 h-4 mr-2" />Get Live Quote</>}
-          </Button>
-        )}
-        {quote && (
-          <>
-            <Card className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-700 p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-slate-300">Live Exchange Rate</h3>
-                <Button type="button" variant="ghost" size="sm" onClick={handleRefreshRate} disabled={loading} className="h-7 text-xs text-cyan-400 hover:text-cyan-300"><RefreshCw className={`w-3 h-3 mr-1 ${loading ? 'animate-spin' : ''}`} />Refresh</Button>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 bg-slate-900/50 p-3 rounded">
-                    <p className="text-xs text-slate-400 mb-1">You Send</p>
-                    <p className="text-xl font-bold text-cyan-400">{sendAmount} ADA</p>
+            <div>
+              <CardTitle className="text-xl text-card-foreground">Send Money</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Fast & secure transfers powered by Cardano
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          {/* Error Alert */}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Card className="bg-destructive/10 border-destructive/30 p-4">
+                  <div className="flex gap-3">
+                    <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-destructive">Error</p>
+                      <p className="text-sm text-destructive/80">{error}</p>
+                    </div>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-slate-500 flex-shrink-0" />
-                  <div className="flex-1 bg-slate-900/50 p-3 rounded">
-                    <p className="text-xs text-slate-400 mb-1">They Receive</p>
-                    <p className="text-xl font-bold text-green-400">≈ {quote.best_transaction.amount.toFixed(2)} {currency}</p>
-                  </div>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleSubmit()
+            }}
+            className="space-y-6"
+          >
+            {/* Amount Input Section */}
+            <div className="space-y-3">
+              <Label htmlFor="amount" className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-muted-foreground" />
+                Send Amount
+              </Label>
+              <div className="relative">
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="0.00"
+                  value={sendAmount}
+                  onChange={(e) => setSendAmount(e.target.value)}
+                  className="bg-secondary border-border text-foreground placeholder:text-muted-foreground text-2xl font-bold h-14 pr-16"
+                  step="1"
+                  min="1"
+                  disabled={loading}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Badge variant="secondary" className="bg-primary/10 text-primary border-0 font-bold">
+                    ADA
+                  </Badge>
                 </div>
               </div>
-            </Card>
-            <Button type="submit" disabled={loading || !connected} className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold py-6 text-base">
-              {connected ? <><Zap className="w-4 h-4 mr-2" />Send {sendAmount} ADA</> : "Connect Wallet First"}
-            </Button>
-            <Button type="button" onClick={() => { setQuote(null); setSendAmount(""); setCurrency(""); setRecipientAddress(""); setPayeeSearchQuery(""); }} variant="outline" className="w-full border-slate-600 text-slate-400 hover:bg-slate-700" disabled={loading}>
-              Clear & Start Over
-            </Button>
-          </>
-        )}
-      </form>
-    </>
+            </div>
+
+            {/* Currency Selection */}
+            <div className="space-y-3">
+              <Label htmlFor="currency" className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Globe className="w-4 h-4 text-muted-foreground" />
+                Receiving Currency
+              </Label>
+              <Select value={currency} onValueChange={setCurrency} disabled={loading}>
+                <SelectTrigger className="bg-secondary border-border text-foreground h-12">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  {supportedCurrencies.map((curr) => (
+                    <SelectItem
+                      key={curr}
+                      value={curr.toUpperCase()}
+                      className="text-popover-foreground hover:bg-accent focus:bg-accent"
+                    >
+                      <span className="font-medium">{curr.toUpperCase()}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Recipient Search */}
+            <div className="space-y-3 relative" ref={searchRef}>
+              <Label htmlFor="payee" className="text-sm font-medium text-foreground flex items-center gap-2">
+                <User className="w-4 h-4 text-muted-foreground" />
+                Recipient
+              </Label>
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="payee"
+                  type="text"
+                  placeholder="Search payee or enter wallet address..."
+                  value={payeeSearchQuery}
+                  onChange={handlePayeeInputChange}
+                  onFocus={() => setPayeeSearchOpen(true)}
+                  className="bg-secondary border-border text-foreground placeholder:text-muted-foreground pl-11 h-12"
+                  disabled={loading}
+                  autoComplete="off"
+                />
+                {selectedPayee && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Badge variant="outline" className="bg-chart-2/10 text-chart-2 border-chart-2/30">
+                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                      Verified
+                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              {/* Payee Dropdown */}
+              <AnimatePresence>
+                {payeeSearchOpen && userId && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute z-20 w-full bg-popover border border-border rounded-lg shadow-xl mt-1 overflow-hidden"
+                  >
+                    <div className="max-h-[240px] overflow-y-auto">
+                      {filteredPayees.length > 0 ? (
+                        <div className="p-2 space-y-1">
+                          {filteredPayees.map((payee) => (
+                            <button
+                              key={payee.id}
+                              type="button"
+                              onClick={() => handleSelectPayee(payee)}
+                              className="w-full text-left p-3 rounded-lg hover:bg-accent transition-colors flex items-center justify-between group"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
+                                  <User className="w-5 h-5 text-muted-foreground" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-popover-foreground">
+                                    {payee.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground truncate max-w-[180px]">
+                                    {payee.wallet_address}
+                                  </p>
+                                </div>
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className="text-xs border-border text-muted-foreground group-hover:border-primary group-hover:text-primary transition-colors"
+                              >
+                                {payee.currency}
+                              </Badge>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-6 text-center">
+                          <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mx-auto mb-3">
+                            <Search className="w-6 h-6 text-muted-foreground" />
+                          </div>
+                          <p className="text-sm text-muted-foreground">No saved payees found</p>
+                          <p className="text-xs text-muted-foreground/70 mt-1">
+                            Enter a wallet address manually
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Get Quote Button */}
+            {!quote && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Button
+                  type="button"
+                  onClick={handleGenerateQuote}
+                  disabled={!sendAmount || !currency || !recipientAddress || loading}
+                  className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Getting Live Rates...
+                    </>
+                  ) : (
+                    <>
+                      <TrendingUp className="w-4 h-4 mr-2" />
+                      Get Live Quote
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            )}
+
+            {/* Quote Display */}
+            <AnimatePresence>
+              {quote && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  <Card className="bg-secondary/50 border-border overflow-hidden">
+                    <div className="h-1 bg-gradient-to-r from-chart-1 to-chart-2" />
+                    <CardContent className="p-5">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-chart-1" />
+                          <h3 className="text-sm font-semibold text-card-foreground">
+                            Live Exchange Rate
+                          </h3>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRefreshRate}
+                          disabled={loading}
+                          className="h-8 text-xs text-chart-1 hover:text-chart-1 hover:bg-chart-1/10"
+                        >
+                          <RefreshCw className={`w-3 h-3 mr-1.5 ${loading ? "animate-spin" : ""}`} />
+                          Refresh
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1 bg-background rounded-xl p-4 border border-border">
+                          <p className="text-xs text-muted-foreground mb-1">You Send</p>
+                          <p className="text-2xl font-bold text-chart-1">{sendAmount}</p>
+                          <p className="text-sm text-muted-foreground">ADA</p>
+                        </div>
+
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <ArrowRight className="w-5 h-5 text-primary" />
+                          </div>
+                        </div>
+
+                        <div className="flex-1 bg-background rounded-xl p-4 border border-border">
+                          <p className="text-xs text-muted-foreground mb-1">They Receive</p>
+                          <p className="text-2xl font-bold text-chart-2">
+                            ≈ {quote.best_transaction.amount.toFixed(2)}
+                          </p>
+                          <p className="text-sm text-muted-foreground">{currency}</p>
+                        </div>
+                      </div>
+
+                      {/* Rate Info */}
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Exchange Rate</span>
+                          <span className="font-medium text-card-foreground">
+                            1 ADA = {(quote.best_transaction.amount / Number(sendAmount)).toFixed(4)} {currency}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Submit Button */}
+                  <Button
+                    type="submit"
+                    disabled={loading || !connected}
+                    className="w-full h-14 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-base shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : connected ? (
+                      <>
+                        <Zap className="w-5 h-5 mr-2" />
+                        Send {sendAmount} ADA
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="w-5 h-5 mr-2" />
+                        Connect Wallet First
+                      </>
+                    )}
+                  </Button>
+
+                  {/* Clear Button */}
+                  <Button
+                    type="button"
+                    onClick={resetForm}
+                    variant="ghost"
+                    className="w-full text-muted-foreground hover:text-foreground hover:bg-accent"
+                    disabled={loading}
+                  >
+                    Clear & Start Over
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </form>
+
+          {/* Footer Info */}
+          {!quote && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="pt-4 border-t border-border"
+            >
+              <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-chart-1" />
+                  <span>Instant transfers</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5 text-chart-2" />
+                  <span>Best rates</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-chart-4" />
+                  <span>Secure</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   )
 }
