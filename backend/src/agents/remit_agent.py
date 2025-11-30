@@ -1,59 +1,103 @@
 from crewai import Agent, Task, Crew, Process
-from src.core.llm_factory import LLMFactory
 from src.tools.agent_tools import RemitTools
+from src.core.llm_factory import LLMFactory
 from src.services.user_service import UserService
 from src.services.context_service import ContextService
+from typing import Union, AsyncGenerator
 
 class RemitAgentManager:
     def __init__(self):
         self.llm = LLMFactory.create_llm()
         self.user_service = UserService()
         self.context_service = ContextService()
-        
-    def chat(self, user_message: str, context: dict = None) -> str:
-        # 1. Extract IDs
+
+    async def chat(self, user_message: str, context: Union[dict, None] = None) -> AsyncGenerator[str, None]:
+        context = context or {}
         conversation_id = context.get("conversation_id", "default")
-        current_user_id = context.get("user_id", 99) # Default to our mock "Sender"
+        current_user_id = context.get("user_id", 99)
 
         self.context_service.add_message(conversation_id, "user", user_message)
 
-        chat_history = self.context_service.get_history(conversation_id)
-        
-        relations = self.user_service.get_user_relationships(current_user_id)
-        relations_str = f"KNOWN RELATIONSHIPS: {relations}" if relations else ""
-
-        assistant = Agent(
-            role='Remittance Assistant',
-            goal='Help users send money, check rates, and find recipients efficiently.',
-            backstory=f"""You are an expert AI assistant for RemitAI. 
-            
-            CONTEXT AWARENESS:
-            {relations_str}
-            
-            {chat_history}
-            
-            INSTRUCTIONS:
-            - If the user says "sister", check KNOWN RELATIONSHIPS to find the name (e.g., Dipisha).
-            - Use the 'Search Users' tool with the real name if found.
-            - Remember previous details from CHAT HISTORY.
-            """,
-            tools=[RemitTools.search_users, RemitTools.swap_ada_to_stable, RemitTools.get_ada_to_stable_rate],
+        # --- 1️⃣ ROUTING AGENT ---
+        router = Agent(
+            role="Intent Router",
+            goal='Decide if user intent is "rate_inquiry" or "transaction_plan" ONLY.',
+            backstory="You analyze user intent and pick one of two possible categories.",
             llm=self.llm,
-            verbose=True,
-
         )
 
-        # 5. Define Task
-        task = Task(
-            description=f"User says: '{user_message}'. Answer based on context and tools.",
-            expected_output="A helpful text response.",
-            agent=assistant
+        route_task = Task(
+            description=f"Classify this message: '{user_message}' into 'rate_inquiry' or 'transaction_plan'. Output only one of these two strings.",
+            expected_output="Either 'rate_inquiry' or 'transaction_plan'",
+            agent=router,
         )
 
-        crew = Crew(agents=[assistant], tasks=[task], process=Process.sequential, )
-        result = crew.kickoff()
-        
-        # 6. Persist AI Response
-        self.context_service.add_message(conversation_id, "assistant", str(result))
-        
-        return str(result)
+        route_crew = Crew(
+            agents=[router],
+            tasks=[route_task],
+            process=Process.sequential,
+        )
+
+        routing_decision = str(route_crew.kickoff()).strip().lower()
+        if "rate" in routing_decision:
+            intent = "rate_inquiry"
+        elif "transaction" in routing_decision or "plan" in routing_decision:
+            intent = "transaction_plan"
+        else:
+            intent = "unknown"
+
+        # --- 2️⃣ SPECIALIST AGENT ---
+        if intent == "rate_inquiry":
+            agent = Agent(
+                role="Rate Inquiry Specialist",
+                goal="Answer user questions about crypto exchange rates using your tools.",
+                backstory="You are a financial expert who provides accurate exchange rates.",
+                tools=[RemitTools.get_ada_to_stable_rate, RemitTools.swap_ada_to_stable],
+                llm=self.llm,
+                verbose=True,
+            )
+
+            task = Task(
+                description=f"The user asked: '{user_message}'. Use your tools to get a clear, concise rate answer.",
+                expected_output="A helpful answer with the exchange rate.",
+                agent=agent,
+            )
+
+        elif intent == "transaction_plan":
+            agent = Agent(
+                role="Transaction Planner",
+                goal="Help the user prepare a remittance transaction.",
+                backstory="You find recipients and calculate transaction quotes.",
+                tools=[RemitTools.search_my_payees, RemitTools.swap_ada_to_stable],
+                llm=self.llm,
+                verbose=True,
+            )
+
+            task = Task(
+                description=f"""The user said: '{user_message}'.
+                1. Identify recipient (using Search My Payees tool with user_id={current_user_id}).
+                2. Identify amount of ADA to send.
+                3. Use Swap ADA to Stablecoin to get a quote.
+                4. Summarize the transaction plan clearly.""",
+                expected_output="Transaction plan summary or ask for missing amount.",
+                agent=agent,
+            )
+        else:
+            yield f"❌ Sorry, I couldn’t understand your intent. Got: '{routing_decision}'. Try again."
+            return
+
+        # --- 3️⃣ RUN THE SPECIALIST CREW STREAM ---
+        specialist_crew = Crew(
+            agents=[agent],
+            tasks=[task],
+            process=Process.sequential,
+        )
+
+        try:
+            for chunk in specialist_crew.kickoff_stream():
+                yield str(chunk)
+        except Exception as e:
+            result = specialist_crew.kickoff()
+            yield str(result)
+
+        self.context_service.add_message(conversation_id, "assistant", "✅ Done.")
