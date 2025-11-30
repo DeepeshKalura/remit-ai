@@ -18,7 +18,7 @@ class JobResponse(BaseModel):
 
 class InputSchema(BaseModel):
     description: str
-    schema_json: Dict[str, Any]
+    input_schema_definition: Dict[str, Any]
 
 # --- Endpoints ---
 
@@ -32,7 +32,7 @@ async def get_input_schema():
     """MIP-003: Define what this agent accepts."""
     return InputSchema(
         description="Remittance Assistant Agent. Accepts natural language queries about rates and users.",
-        schema_json={
+        input_schema_definition={
             "type": "object",
             "properties": {
                 "message": {"type": "string", "description": "The user query (e.g., 'Send 100 ADA to India')"},

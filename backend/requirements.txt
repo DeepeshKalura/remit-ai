@@ -12,3 +12,6 @@ thefuzz[speedup]
 uvicorn
 pysqlite3-binary
 httpx
+langchain-core
+loguru
+uvicorn
