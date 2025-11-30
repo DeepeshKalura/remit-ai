@@ -5,63 +5,65 @@ import sys
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-load_dotenv()
 
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+# This is a workaround for using ChromaDB on certain systems
+try:
+    __import__('pysqlite3')
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+except ImportError:
+    pass # If pysqlite3 is not installed, continue with the standard sqlite3
+
 
 class Settings(BaseSettings):
     """
-    Config file for system
+    Config file for the system, loading variables from the environment.
     """
 
-    model_config = SettingsConfigDict(env_file=".env")
+    # Pydantic configuration to look for a .env file
+    model_config = SettingsConfigDict(env_file=".env", extra='ignore')
 
+    # --- Cardano Configuration ---
     CARDANO_BLOCKFROST_API_KEY: str
-    CARDANO_NETWORK: str
+    CARDANO_NETWORK: str = "preprod" # Can be: preprod / preview / mainnet
+    BLOCKFROST_API_KEY_PREPROD: str
 
-    # Masumi
-    MASUMI_API_KEY: str = ""
-    MASUMI_TESTNET: str = ""
-    MASUMI_PAYMENT_SERVICE_URL: str = "http://localhost:3000"
+    # --- Masumi Configuration ---
+    MASUMI_API_KEY: str
+    MASUMI_TESTNET: bool = True # Use bool for true/false values
+    MASUMI_PAYMENT_SERVICE_URL: str
+    ENCRYPTION_KEY: str
+    ADMIN_KEY: str
 
-    # Wallet
-    AGENT_WALLET_ADDRESS: str = ""
-    AGENT_WALLET_SIGNING_KEY: str = ""
-
-    # AI Configuration
-    # Options: "ollama", "openai", "azure"
+    # --- Agent Wallet Configuration ---
+    AGENT_WALLET_ADDRESS: str
+    AGENT_WALLET_SIGNING_KEY: str
+    
+    # --- Agent Identity on Masumi Network (MIP-003) ---
+    AGENT_IDENTIFIER: str = "remit-ai-agent-v1"
+    SELLER_VKEY: str # Your wallet verification key for receiving funds
+    
+    # --- Payment Service Configuration ---
+    PAYMENT_SERVICE_URL: str
+    PAYMENT_API_KEY: str
+    
+    # --- Default Payment Values ---
+    PAYMENT_AMOUNT: str = "1000000"
+    PAYMENT_UNIT: str = "lovelace"
+    
+    # --- AI Provider Configuration ---
+    # Options: "ollama", "openai", "openrouter", "gemini"
     LLM_PROVIDER: str = "ollama" 
 
-    # AI/CrewAI
+    # --- API Keys for AI Providers ---
     OPENAI_API_KEY: str = ""
-    OPENAI_MODEL_NAME: str = "gpt-4o"
+    OPENROUTER_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
 
-
-    # Ollama (Local AI)
+    # --- Specific Model Configuration ---
+    OPENAI_MODEL_NAME: str = "gpt-4o" # Model to use if LLM_PROVIDER is 'openai'
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "llama3.2"
-
-    # Masumi Protocol (MIP-003)
-    # The URL of the local payment service (docker container)
-    PAYMENT_SERVICE_URL: str = "http://localhost:3000/api/v1"
-    PAYMENT_API_KEY: str = "dev-key" # Set this in the payment service env too
-    
-    # Your Agent's Identity on Masumi Network
-    AGENT_IDENTIFIER: str = "remit-ai-agent-v1"
-    SELLER_VKEY: str = "" # Your wallet verification key for receiving funds
-    
-    # Cardano
-    CARDANO_NETWORK: str = "prepoad" # preprod / preview / mainnet
-
-    BLOCKFROST_API_KEY_PREPROD: str = ""
-    ENCRYPTION_KEY: str = ""
-    ADMIN_KEY: str = ""
-    OPENROUTER_API_KEY:str = ""
-    GEMINI_API_KEY:str= ""
-    HOME:str="/tmp"
+    OLLAMA_MODEL: str = "llama3" # Default model if LLM_PROVIDER is 'ollama'
 
 
-
+# Create a single instance of the settings to be imported by other parts of the app
 settings = Settings()
